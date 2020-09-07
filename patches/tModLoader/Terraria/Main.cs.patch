@@ -715,6 +715,15 @@
  			}
  
  			for (int n = 0; n < 1001; n++) {
+@@ -8150,7 +_,7 @@
+ 			PlayerInput.OnBindingChange += ItemTooltip.InvalidateTooltips;
+ 			clientUUID = Guid.NewGuid().ToString();
+ 			_ = Terraria.Graphics.Effects.Filters.Scene;
+-			Platform.Current.InitializeClientServices(base.Window.Handle);
++			Platform.Current.InitializeClientServices();
+ 			Platform.Get<IImeService>().AddKeyListener(delegate (char keyStroke) {
+ 				if (keyCount < 10) {
+ 					keyInt[keyCount] = keyStroke;
 @@ -8252,6 +_,8 @@
  			AssetInitializer.LoadSplashAssets(asyncLoadForSounds: true);
  			ChromaInitializer.Load();

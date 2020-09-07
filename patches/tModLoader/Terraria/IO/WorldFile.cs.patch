@@ -116,6 +116,15 @@
  					writer.Write(nPC2.active);
  					writer.Write(nPC2.netID);
  					writer.WriteVector2(nPC2.position);
+@@ -1272,7 +_,7 @@
+ 				try {
+ 					Main.WorldFileMetadata = FileMetadata.Read(reader, FileType.World);
+ 				}
+-				catch (FileFormatException value) {
++				catch (FormatException value) {
+ 					Console.WriteLine(Language.GetTextValue("Error.UnableToLoadWorld"));
+ 					Console.WriteLine(value);
+ 					return false;
 @@ -1859,7 +_,7 @@
  				int num3 = reader.ReadInt32();
  				Tile tile = Main.tile[num2, num3];

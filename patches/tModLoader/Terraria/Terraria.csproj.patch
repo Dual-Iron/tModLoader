@@ -10,10 +10,13 @@
    </PropertyGroup>
    <PropertyGroup Condition="$(Configuration.Contains('Server'))">
      <OutputType>Exe</OutputType>
-@@ -18,15 +_,23 @@
+@@ -17,56 +_,71 @@
+     <OutputName>$(OutputName)Debug</OutputName>
    </PropertyGroup>
    <PropertyGroup>
-     <PdbFile>bin\$(OutputName)</PdbFile>
++    <AssemblyName>$(OutputName)</AssemblyName>
+-    <PdbFile>bin\$(OutputName)</PdbFile>
++    <TargetName>$(OutputName)</TargetName>
 -    <ApplicationIcon>Icon.ico</ApplicationIcon>
 +    <ApplicationIcon>tModLoader.ico</ApplicationIcon>
    </PropertyGroup>
@@ -36,9 +39,11 @@
      <Reference Include="Newtonsoft.Json" />
      <Reference Include="RailSDK.Net">
        <HintPath Condition="$(DefineConstants.Contains('WINDOWS'))">Libraries/Windows/RailSDK.Net.dll</HintPath>
-@@ -35,8 +_,8 @@
+       <HintPath Condition="$(DefineConstants.Contains('MAC'))">Libraries/Mac/RailSDK.Net.dll</HintPath>
+       <HintPath Condition="$(DefineConstants.Contains('LINUX'))">Libraries/Linux/RailSDK.Net.dll</HintPath>
      </Reference>
-     <ProjectReference Include="../ReLogic/ReLogic.csproj" />
+-    <ProjectReference Include="../ReLogic/ReLogic.csproj" />
++    <Reference Include="../ReLogic/bin/$(Configuration)/$(TargetFramework)/ReLogic.dll" />
      <EmbeddedResource Include="../ReLogic/bin/$(Configuration)/$(TargetFramework)/ReLogic.dll">
 -	  <Link>Libraries/ReLogic/ReLogic.dll</Link>
 +      <Link>Libraries/ReLogic/ReLogic.dll</Link>
@@ -47,15 +52,17 @@
      </EmbeddedResource>
      <Reference Include="Steamworks.NET">
        <HintPath Condition="$(DefineConstants.Contains('WINDOWS'))">Libraries/Windows/Steamworks.NET.dll</HintPath>
-@@ -47,23 +_,27 @@
-     <Reference Include="System.Core" />
-     <Reference Include="System.Drawing" />
-     <Reference Include="System.Runtime.Serialization" />
-+    <Reference Include="System.XML" />
+       <HintPath Condition="$(DefineConstants.Contains('MAC'))">Libraries/Mac/Steamworks.NET.dll</HintPath>
+       <HintPath Condition="$(DefineConstants.Contains('LINUX'))">Libraries/Linux/Steamworks.NET.dll</HintPath>
+     </Reference>
+-    <Reference Include="System" />
+-    <Reference Include="System.Core" />
+-    <Reference Include="System.Drawing" />
+-    <Reference Include="System.Runtime.Serialization" />
      <Reference Include="System.Windows.Forms">
        <HintPath Condition="$(DefineConstants.Contains('Mono'))">Libraries/Mono/System.Windows.Forms.dll</HintPath>
      </Reference>
-     <Reference Include="WindowsBase" />
+-    <Reference Include="WindowsBase" />
    </ItemGroup>
    <ItemGroup>
 +    <EmbeddedResource Include="**\*.png" />
@@ -78,14 +85,27 @@
      <EmbeddedResource Include="Localization/Content/**" />
      <EmbeddedResource Include="Microsoft/**" />
    </ItemGroup>
-@@ -82,7 +_,11 @@
++  <ItemGroup>
++    <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
++    <PackageReference Include="System.CodeDom" Version="4.7.0" />
++    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.7.0" />
++    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="4.7.0" />
++    <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
++    <PackageReference Include="System.Reflection" Version="4.3.0" />
++  </ItemGroup>
+   <Target Name="EditBin" AfterTargets="Build">
+     <PropertyGroup>
+         <EditBinOpts>/largeaddressaware</EditBinOpts>
+@@ -82,7 +_,13 @@
    </Target>
    <Target Name="CopyToStreamDir" AfterTargets="EditBin" Condition="$(Configuration.Contains('Windows'))">
      <Message Text="Copying $(OutputName) to Steam Dir..." Importance="high" />
 -    <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TerrariaSteamPath)\$(OutputName).exe" />
-+    <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(tModLoaderSteamPath)\$(OutputName).exe" />
 -    <Copy SourceFiles="$(TargetDir)$(OutputName).pdb" DestinationFolder="$(TerrariaSteamPath)" />
-+    <Copy SourceFiles="$(TargetDir)$(OutputName).pdb" DestinationFolder="$(tModLoaderSteamPath)" />
++    <CreateItem Include="$(TargetDir)**\*.*">
++      <Output TaskParameter="Include" ItemName="CoreBuild" />
++    </CreateItem>
++    <Copy SourceFiles="@(CoreBuild)" DestinationFolder="$(tModLoaderSteamPath)\%(RecursiveDir)" />
 +  </Target>
 +  <Target Name="CopyToModCompile" AfterTargets="EditBin" Condition="$(Configuration)==MacRelease">
 +    <Message Text="Copying tModLoaderMac to ModCompile..." Importance="high" />

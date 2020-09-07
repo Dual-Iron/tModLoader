@@ -27,6 +27,15 @@
  				ActiveCulture = culture;
  				Thread.CurrentThread.CurrentCulture = culture.CultureInfo;
  				Thread.CurrentThread.CurrentUICulture = culture.CultureInfo;
+@@ -92,7 +_,7 @@
+ 				try {
+ 					string text2 = Utils.ReadEmbeddedResource(text);
+ 					if (text2 == null || text2.Length < 2)
+-						throw new FileFormatException();
++						throw new FormatException();
+ 
+ 					LoadLanguageFromFileText(text2);
+ 				}
 @@ -106,10 +_,13 @@
  			}
  		}
