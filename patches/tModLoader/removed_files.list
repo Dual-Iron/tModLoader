@@ -1,2 +1,7 @@
+ReLogic\Localization\IME\WindowsIme.cs
+ReLogic\OS\Windows\WindowsMessage.cs
+ReLogic\OS\Windows\WindowsMessageHook.cs
 Terraria\Libraries\DotNetZip\Ionic.Zip.CF.dll
 Terraria\Libraries\JSON.NET\Newtonsoft.Json.dll
+ReLogic\Localization\IME\Windows\Imm.cs
+ReLogic\Localization\IME\Windows\NativeMethods.cs

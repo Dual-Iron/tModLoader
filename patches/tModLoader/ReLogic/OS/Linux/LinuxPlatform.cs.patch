@@ -1,0 +1,12 @@
+--- src/Terraria/ReLogic/OS/Linux/LinuxPlatform.cs
++++ src/tModLoader/ReLogic/OS/Linux/LinuxPlatform.cs
+@@ -12,9 +_,5 @@
+ 			RegisterService((IWindowService)new WindowService());
+ 			RegisterService((IImeService)new UnsupportedPlatformIme());
+ 		}
+-
+-		public override void InitializeClientServices(IntPtr windowHandle) {
+-			RegisterService((IImeService)new FnaIme());
+-		}
+ 	}
+ }
