@@ -147,6 +147,7 @@ namespace Terraria.ModLoader.UI
 			_scrollPanel.Append(_uiLoader);
 			_modPacks.Clear();
 
+			var curContext = SynchronizationContext.Current is null ? TaskScheduler.Current : TaskScheduler.FromCurrentSynchronizationContext();
 			Task.Factory
 				.StartNew(delegate {
 					Mods = ModOrganizer.FindMods().Select(m => m.Name).ToArray();
@@ -171,7 +172,7 @@ namespace Terraria.ModLoader.UI
 						}
 					}
 					_scrollPanel.RemoveChild(_uiLoader);
-				}, _cts.Token, TaskContinuationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());
+				}, _cts.Token, TaskContinuationOptions.None, curContext);
 		}
 	}
 }

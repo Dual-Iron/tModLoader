@@ -1,4 +1,7 @@
 using log4net.Core;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Emit;
 using Mono.Cecil;
 using Mono.Cecil.Mdb;
 using Mono.Cecil.Pdb;
@@ -10,6 +13,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -137,7 +141,7 @@ namespace Terraria.ModLoader.Core
 			return false;
 		}
 
-		internal static bool PlatformSupportsVisualStudio => !Platform.IsLinux;
+		internal static bool PlatformSupportsVisualStudio => !ReLogic.OS.Platform.IsLinux;
 
 		// TODO CORE -- Compile
 		private static string referenceAssembliesPath;
@@ -147,17 +151,18 @@ namespace Terraria.ModLoader.Core
 			if (referenceAssembliesPath != null)
 				return true;
 
-			if (Platform.IsWindows)
-				referenceAssembliesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) + @"\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.5";
-			else if (Platform.IsOSX)
+			if (ReLogic.OS.Platform.IsWindows)
+				referenceAssembliesPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86) + @"\dotnet\shared\Microsoft.NETCore.App\" + Environment.Version.ToString(3);
+			else if (ReLogic.OS.Platform.IsOSX)
 				referenceAssembliesPath = "/Library/Frameworks/Mono.framework/Versions/Current/lib/mono/4.5-api";
-			else if (Platform.IsLinux)
+			else if (ReLogic.OS.Platform.IsLinux)
 				referenceAssembliesPath = "/usr/lib/mono/4.5-api";
 
 			if (Directory.Exists(referenceAssembliesPath))
 				return true;
 
-			referenceAssembliesPath = Path.Combine(modCompileDir, "v4.5 Reference Assemblies");
+			// TODO CORE -- Add ref assemblies for modcompile
+			referenceAssembliesPath = Path.Combine(modCompileDir, ".NET Core Reference Assemblies");
 			if (Directory.Exists(referenceAssembliesPath) && Directory.EnumerateFiles(referenceAssembliesPath).Any(x => Path.GetExtension(x) != ".tmp"))
 				return true;
 
@@ -360,7 +365,6 @@ namespace Terraria.ModLoader.Core
 				status.SetStatus(Language.GetTextValue("tModLoader.Building", mod.Name));
 
 				List<LocalMod> refMods = null;
-				BuildModForPlatform(mod, ref refMods, true);
 				BuildModForPlatform(mod, ref refMods, false);
 
 				if (Program.LaunchParameters.TryGetValue("-eac", out var eacValue)) {
@@ -580,7 +584,7 @@ namespace Terraria.ModLoader.Core
 
 			// add framework assemblies
 			refs.AddRange(Directory.GetFiles(referenceAssembliesPath, "*.dll", SearchOption.AllDirectories)
-				.Where(path => !path.EndsWith("Thunk.dll") && !path.EndsWith("Wrapper.dll")));
+				.Where(path => path.StartsWith("System") || path.StartsWith("Microsoft")));
 
 			//libs added by the mod
 			refs.AddRange(mod.properties.dllReferences.Select(dllName => DllRefPath(mod, dllName, xna)));
@@ -663,55 +667,42 @@ namespace Terraria.ModLoader.Core
 				GetTerrariaReference(xna)
 			};
 
-			if (xna == PlatformUtilities.IsXNA) {
-				var executingAssembly = Assembly.GetExecutingAssembly();
+			var executingAssembly = Assembly.GetExecutingAssembly();
 
-				// avoid a double extract of the embedded dlls
-				if (referencesUpdated) {
-					refs.AddRange(Directory.GetFiles(modReferencesPath, "*.dll"));
-					return refs;
+			// avoid a double extract of the embedded dlls
+			referencesUpdated = false;
+			if (referencesUpdated) {
+				refs.AddRange(Directory.GetFiles(modReferencesPath, "*.dll"));
+				return refs;
+			}
+
+			static bool IsValid(string file) {
+				if (!file.EndsWith(".dll"))
+					return false;
+				try {
+					AssemblyName.GetAssemblyName(file);
+					return true;
 				}
-
-				//extract embedded resource dlls to the references path rather than the tempDir
-				foreach (string resName in executingAssembly.GetManifestResourceNames().Where(n => n.EndsWith(".dll"))) {
-					string path = Path.Combine(modReferencesPath, Path.GetFileName(resName));
-
-					using (Stream res = executingAssembly.GetManifestResourceStream(resName), file = File.Create(path))
-						res.CopyTo(file);
-
-					refs.Add(path);
+				catch (BadImageFormatException) {
+					return false;
 				}
 			}
-			else {
-				//extract embedded resource dlls to a temporary folder
-				var terrariaModule = AssemblyDefinition.ReadAssembly(refs[0]).MainModule;
 
-				foreach (var res in terrariaModule.Resources.OfType<EmbeddedResource>().Where(res => res.Name.EndsWith(".dll"))) {
-					string path = Path.Combine(tempDir, Path.GetFileName(res.Name));
+			//extract embedded resource dlls to the references path rather than the tempDir
+			foreach (string resName in executingAssembly.GetManifestResourceNames().Where(IsValid)) {
+				string path = Path.Combine(modReferencesPath, Path.GetFileName(resName));
 
-					using (Stream s = res.GetResourceStream(), file = File.Create(path))
-						s.CopyTo(file);
+				using (Stream res = executingAssembly.GetManifestResourceStream(resName), file = File.Create(path))
+					res.CopyTo(file);
 
-					refs.Add(path);
-				}
+				refs.Add(path);
 			}
+
+			// Add primitive libs
+			refs.Add(Assembly.Load("System.Runtime, Version=4.2.2.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a").Location);
+			refs.Add(Assembly.Load("System.Private.CoreLib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e").Location);
 
 			return refs;
-		}
-
-		private static Type roslynWrapper;
-		private static Type RoslynWrapper {
-			get {
-				if (roslynWrapper == null) {
-					AppDomain.CurrentDomain.AssemblyResolve += (o, args) => {
-						var name = new AssemblyName(args.Name).Name;
-						var f = Path.Combine(modCompileDir, name + ".dll");
-						return File.Exists(f) ? Assembly.LoadFile(f) : null;
-					};
-					roslynWrapper = Assembly.LoadFile(Path.Combine(modCompileDir, "RoslynWrapper.dll")).GetType("Terraria.ModLoader.RoslynWrapper");
-				}
-				return roslynWrapper;
-			}
 		}
 
 		/// <summary>
@@ -719,8 +710,42 @@ namespace Terraria.ModLoader.Core
 		/// </summary>
 		private static CompilerErrorCollection RoslynCompile(string name, string outputPath, string[] references, string[] files, string[] preprocessorSymbols, bool includePdb, bool allowUnsafe)
 		{
-			return (CompilerErrorCollection)RoslynWrapper.GetMethod("Compile")
-				.Invoke(null, new object[] { name, outputPath, references, files, preprocessorSymbols, includePdb, allowUnsafe });
+			var pdbPath = Path.ChangeExtension(outputPath, "pdb");
+
+			var options = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
+				assemblyIdentityComparer: DesktopAssemblyIdentityComparer.Default,
+				optimizationLevel: preprocessorSymbols.Contains("DEBUG") ? OptimizationLevel.Debug : OptimizationLevel.Release,
+				allowUnsafe: allowUnsafe);
+
+			var parseOptions = new CSharpParseOptions(LanguageVersion.Latest, preprocessorSymbols: preprocessorSymbols);
+
+			bool mono = Type.GetType("Mono.Runtime") != null;
+			var emitOptions = new EmitOptions(debugInformationFormat: DebugInformationFormat.PortablePdb);
+
+			var refs = references.Select(s => MetadataReference.CreateFromFile(s));
+			var src = files.Select(f => SyntaxFactory.ParseSyntaxTree(File.ReadAllText(f), parseOptions, f, Encoding.UTF8));
+			var comp = CSharpCompilation.Create(name, src, refs, options);
+
+			EmitResult results;
+			using (var peStream = File.OpenWrite(outputPath))
+			using (var pdbStream = includePdb ? File.OpenWrite(pdbPath) : null) {
+				results = comp.Emit(peStream, pdbStream, options: emitOptions);
+			}
+
+			var errors = new CompilerErrorCollection();
+			foreach (var d in results.Diagnostics.Where(d => d.Severity >= DiagnosticSeverity.Warning)) {
+				var loc = d.Location.GetLineSpan();
+				errors.Add(new CompilerError {
+					ErrorNumber = d.Id,
+					IsWarning = d.Severity == DiagnosticSeverity.Warning,
+					ErrorText = d.GetMessage(),
+					FileName = loc.Path ?? "",
+					Line = loc.StartLinePosition.Line + 1,
+					Column = loc.StartLinePosition.Character
+				});
+			}
+
+			return errors;
 		}
 
 		private static FileStream AcquireConsoleBuildLock()

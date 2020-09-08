@@ -175,6 +175,7 @@ namespace Terraria.ModLoader.UI
 		}
 
 		internal void Populate() {
+			var curContext = SynchronizationContext.Current is null ? TaskScheduler.Current : TaskScheduler.FromCurrentSynchronizationContext();
 			Task.Factory.StartNew(
 				delegate {
 					var modSources = ModCompile.FindModSources();
@@ -189,7 +190,7 @@ namespace Terraria.ModLoader.UI
 						_items.Add(new UIModSourceItem(sourcePath, builtMod));
 					}
 					_updateNeeded = true;
-				}, _cts.Token, TaskContinuationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());
+				}, _cts.Token, TaskContinuationOptions.None, curContext);
 		}
 
 		public override void Update(GameTime gameTime) {

@@ -10,7 +10,7 @@
    </PropertyGroup>
    <PropertyGroup Condition="$(Configuration.Contains('Server'))">
      <OutputType>Exe</OutputType>
-@@ -17,56 +_,70 @@
+@@ -17,56 +_,71 @@
      <OutputName>$(OutputName)Debug</OutputName>
    </PropertyGroup>
    <PropertyGroup>
@@ -88,6 +88,7 @@
      <EmbeddedResource Include="Microsoft/**" />
    </ItemGroup>
 +  <ItemGroup>
++    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.7.0" />
 +    <PackageReference Include="Microsoft.Win32.Registry" Version="4.7.0" />
 +    <PackageReference Include="System.CodeDom" Version="4.7.0" />
 +    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.7.0" />

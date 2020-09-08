@@ -274,9 +274,10 @@ namespace Terraria.ModLoader
 		internal static List<string> badUnloaders = new List<string>();
 		private static void WarnModsStillLoaded()
 		{
-			badUnloaders = weakModReferences.Where(r => r.IsAlive).Select(r => ((Mod)r.Target).Name).ToList();
-			foreach (var modName in badUnloaders)
-				Logging.tML.WarnFormat("{0} not fully unloaded during unload.", modName);
+			// TODO CORE -- Force-unload all mods using .NET Core stuffs. @Mirsario
+			//badUnloaders = weakModReferences.Where(r => r.IsAlive).Select(r => ((Mod)r.Target).Name).ToList();
+			//foreach (var modName in badUnloaders)
+			//	Logging.tML.WarnFormat("{0} not fully unloaded during unload.", modName);
 		}
 
 		private static void DisplayLoadError(string msg, Exception e, bool fatal, bool continueIsRetry = false)

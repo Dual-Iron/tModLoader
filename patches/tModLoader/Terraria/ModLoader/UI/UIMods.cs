@@ -344,6 +344,7 @@ namespace Terraria.ModLoader.UI
 		}
 
 		internal void Populate() {
+			var curContext = SynchronizationContext.Current is null ? TaskScheduler.Current : TaskScheduler.FromCurrentSynchronizationContext();
 			Task.Factory
 				.StartNew(ModOrganizer.FindMods, _cts.Token)
 				.ContinueWith(task => {
@@ -356,7 +357,7 @@ namespace Terraria.ModLoader.UI
 					needToRemoveLoading = true;
 					updateNeeded = true;
 					loading = false;
-				}, _cts.Token, TaskContinuationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());
+				}, _cts.Token, TaskContinuationOptions.None, curContext);
 		}
 	}
 
