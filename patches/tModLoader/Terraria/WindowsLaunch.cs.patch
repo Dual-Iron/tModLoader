@@ -1,0 +1,141 @@
+--- src/Terraria/Terraria/WindowsLaunch.cs
++++ src/tModLoader/Terraria/WindowsLaunch.cs
+@@ -1,75 +_,73 @@
+-#if WINDOWS
+-using System;
++//using System;
+-using System.IO;
++//using System.IO;
+-using System.Reflection;
++//using System.Reflection;
+-using System.Runtime.InteropServices;
++//using System.Runtime.InteropServices;
+-using Terraria.Social;
++//using Terraria.Social;
+ 
+-namespace Terraria
++//namespace Terraria
+-{
++//{
+-	public static class WindowsLaunch
++//	public static class WindowsLaunch
+-	{
++//	{
+-		public delegate bool HandlerRoutine(CtrlTypes ctrlType);
++//		public delegate bool HandlerRoutine(CtrlTypes ctrlType);
+ 
+-		public enum CtrlTypes
++//		public enum CtrlTypes
+-		{
++//		{
+-			CTRL_C_EVENT = 0,
++//			CTRL_C_EVENT = 0,
+-			CTRL_BREAK_EVENT = 1,
++//			CTRL_BREAK_EVENT = 1,
+-			CTRL_CLOSE_EVENT = 2,
++//			CTRL_CLOSE_EVENT = 2,
+-			CTRL_LOGOFF_EVENT = 5,
++//			CTRL_LOGOFF_EVENT = 5,
+-			CTRL_SHUTDOWN_EVENT = 6
++//			CTRL_SHUTDOWN_EVENT = 6
+-		}
++//		}
+ 
+-		private static HandlerRoutine _handleRoutine;
++//		private static HandlerRoutine _handleRoutine;
+ 
+-		private static bool ConsoleCtrlCheck(CtrlTypes ctrlType) {
++//		private static bool ConsoleCtrlCheck(CtrlTypes ctrlType) {
+-			bool flag = false;
++//			bool flag = false;
+-			switch (ctrlType) {
++//			switch (ctrlType) {
+-				case CtrlTypes.CTRL_C_EVENT:
++//				case CtrlTypes.CTRL_C_EVENT:
+-					flag = true;
++//					flag = true;
+-					break;
++//					break;
+-				case CtrlTypes.CTRL_BREAK_EVENT:
++//				case CtrlTypes.CTRL_BREAK_EVENT:
+-					flag = true;
++//					flag = true;
+-					break;
++//					break;
+-				case CtrlTypes.CTRL_CLOSE_EVENT:
++//				case CtrlTypes.CTRL_CLOSE_EVENT:
+-					flag = true;
++//					flag = true;
+-					break;
++//					break;
+-				case CtrlTypes.CTRL_LOGOFF_EVENT:
++//				case CtrlTypes.CTRL_LOGOFF_EVENT:
+-				case CtrlTypes.CTRL_SHUTDOWN_EVENT:
++//				case CtrlTypes.CTRL_SHUTDOWN_EVENT:
+-					flag = true;
++//					flag = true;
+-					break;
++//					break;
+-			}
++//			}
+ 
+-			if (flag)
++//			if (flag)
+-				SocialAPI.Shutdown();
++//				SocialAPI.Shutdown();
+ 
+-			return true;
++//			return true;
+-		}
++//		}
+ 
+-		[DllImport("Kernel32")]
++//		[DllImport("Kernel32")]
+-		public static extern bool SetConsoleCtrlHandler(HandlerRoutine handler, bool add);
++//		public static extern bool SetConsoleCtrlHandler(HandlerRoutine handler, bool add);
+ 
+-		[STAThread]
++//		[STAThread]
+-		private static void Main(string[] args) {
++//		private static void Main(string[] args) {
+-			AppDomain.CurrentDomain.AssemblyResolve += delegate (object sender, ResolveEventArgs sargs) {
++//			AppDomain.CurrentDomain.AssemblyResolve += delegate (object sender, ResolveEventArgs sargs) {
+-				string resourceName = new AssemblyName(sargs.Name).Name + ".dll";
++//				string resourceName = new AssemblyName(sargs.Name).Name + ".dll";
+-				string text = Array.Find(typeof(Program).Assembly.GetManifestResourceNames(), (string element) => element.EndsWith(resourceName));
++//				string text = Array.Find(typeof(Program).Assembly.GetManifestResourceNames(), (string element) => element.EndsWith(resourceName));
+-				if (text == null)
++//				if (text == null)
+-					return null;
++//					return null;
+ 
+-				using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(text)) {
++//				using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(text)) {
+-					byte[] array = new byte[stream.Length];
++//					byte[] array = new byte[stream.Length];
+-					stream.Read(array, 0, array.Length);
++//					stream.Read(array, 0, array.Length);
+-					return Assembly.Load(array);
++//					return Assembly.Load(array);
+-				}
++//				}
+-			};
++//			};
+ 
+-#if SERVER
++//#if SERVER
+-			WindowsLaunch._handleRoutine = new WindowsLaunch.HandlerRoutine(WindowsLaunch.ConsoleCtrlCheck);
++//			WindowsLaunch._handleRoutine = new WindowsLaunch.HandlerRoutine(WindowsLaunch.ConsoleCtrlCheck);
+-			WindowsLaunch.SetConsoleCtrlHandler(WindowsLaunch._handleRoutine, true);
++//			WindowsLaunch.SetConsoleCtrlHandler(WindowsLaunch._handleRoutine, true);
+-#endif
++//#endif
+-			Program.LaunchGame(args);
++//			Program.LaunchGame(args);
+-		}
+-	}
+-}
+-#endif
++//		}
++//	}
++//}

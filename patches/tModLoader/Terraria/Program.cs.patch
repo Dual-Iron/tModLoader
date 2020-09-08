@@ -133,18 +133,20 @@
  		private static void ForceLoadAssembly(string name, bool initializeStaticMembers) {
  			Assembly assembly = null;
  			Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-@@ -151,27 +_,49 @@
+@@ -151,27 +_,47 @@
  			}
  		}
  
+-		public static void LaunchGame(string[] args, bool monoArgs = false) {
 +		// some versions of the .NET runtime will run the Main static initilizer as soon as LaunchGame is invoked
 +		// causing Main.SavePath to be initialized before LaunchParameters is parsed.
 +		// moving arg parsing to a separate function avoids this
- 		public static void LaunchGame(string[] args, bool monoArgs = false) {
++		public static void LaunchGame(string[] args) {
  			Thread.CurrentThread.Name = "Main Thread";
- 			if (monoArgs)
- 				args = Utils.ConvertMonoArgsToDotNet(args);
- 
+-			if (monoArgs)
+-				args = Utils.ConvertMonoArgsToDotNet(args);
+-
++
 +			LaunchParameters = Utils.ParseArguements(args);
 +			SavePath =
 +				LaunchParameters.ContainsKey("-tmlsavedirectory") ? LaunchParameters["-tmlsavedirectory"] :

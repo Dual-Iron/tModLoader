@@ -8,6 +8,7 @@ using Terraria.Audio;
 using Terraria.GameContent.UI.Elements;
 using Terraria.ID;
 using Terraria.ModLoader.UI.DownloadManager;
+using Terraria.ModLoader.UI.ModBrowser;
 using Terraria.UI;
 
 namespace Terraria.ModLoader.UI
@@ -64,7 +65,7 @@ namespace Terraria.ModLoader.UI
 		public override void OnActivate() {
 			base.OnActivate();
 
-			if (FrameworkVersion.Framework != Framework.Mono || FrameworkVersion.Version >= new Version(5, 20))
+			if (UIModBrowser.PlatformSupportsTls12)
 				_area.AddOrRemoveChild(_autoUpdateButton, !string.IsNullOrEmpty(_autoUpdateUrl));
 		}
 

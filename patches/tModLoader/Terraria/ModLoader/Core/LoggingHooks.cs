@@ -56,10 +56,7 @@ namespace Terraria.ModLoader.Core
 			if (Logging.f_fileName == null)
 				return;
 
-			if (FrameworkVersion.Framework == Framework.NetFramework)
-				new Hook(typeof(StackTrace).GetConstructor(new[] { typeof(Exception), typeof(bool) }), new hook_StackTrace(HookStackTraceEx));
-			else if (FrameworkVersion.Framework == Framework.Mono)
-				new Hook(typeof(Exception).FindMethod("GetStackTrace"), new hook_GetStackTrace(HookGetStackTrace));
+			new Hook(typeof(StackTrace).GetConstructor(new[] { typeof(Exception), typeof(bool) }), new hook_StackTrace(HookStackTraceEx));
 		}
 
 		private delegate EventHandler SendRequest(object self, HttpWebRequest request);

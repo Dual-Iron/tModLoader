@@ -51,7 +51,7 @@ namespace Terraria.ModLoader
 													(branchName.Length == 0 ? "" : $"-{branchName.ToLower()}") +
 													(beta == 0 ? "" : $"-beta{beta}");
 
-		public static string CompressedPlatformRepresentation => (Platform.IsWindows ? "w" : (Platform.IsLinux ? "l" : "m")) + (GoGVerifier.IsGoG ? "g" : "s") + (FrameworkVersion.Framework == Framework.NetFramework ? "n" : (FrameworkVersion.Framework == Framework.Mono ? "o" : "u"));
+		public static string CompressedPlatformRepresentation => (Platform.IsWindows ? "w" : (Platform.IsLinux ? "l" : "m")) + (GoGVerifier.IsGoG ? "g" : "s") + "c";
 
 		public static string ModPath => ModOrganizer.modPath;
 
@@ -205,9 +205,10 @@ namespace Terraria.ModLoader
 
 		private static void DotNet45Check()
 		{
-			if (FrameworkVersion.Framework != Framework.NetFramework || FrameworkVersion.Version >= new Version(4, 5))
+			if (Environment.Version >= ModCompile.minDotNetVersion)
 				return;
 
+			// TODO CORE -- language update
 			var msg = Language.GetTextValue("tModLoader.LoadErrorDotNet45Required");
 #if CLIENT
 			Interface.MessageBoxShow(msg);

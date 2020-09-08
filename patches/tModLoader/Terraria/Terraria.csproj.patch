@@ -10,7 +10,7 @@
    </PropertyGroup>
    <PropertyGroup Condition="$(Configuration.Contains('Server'))">
      <OutputType>Exe</OutputType>
-@@ -17,56 +_,71 @@
+@@ -17,56 +_,70 @@
      <OutputName>$(OutputName)Debug</OutputName>
    </PropertyGroup>
    <PropertyGroup>
@@ -59,9 +59,9 @@
 -    <Reference Include="System.Core" />
 -    <Reference Include="System.Drawing" />
 -    <Reference Include="System.Runtime.Serialization" />
-     <Reference Include="System.Windows.Forms">
-       <HintPath Condition="$(DefineConstants.Contains('Mono'))">Libraries/Mono/System.Windows.Forms.dll</HintPath>
-     </Reference>
+-    <Reference Include="System.Windows.Forms">
+-      <HintPath Condition="$(DefineConstants.Contains('Mono'))">Libraries/Mono/System.Windows.Forms.dll</HintPath>
+-    </Reference>
 -    <Reference Include="WindowsBase" />
    </ItemGroup>
    <ItemGroup>
@@ -73,6 +73,8 @@
 -    <EmbeddedResource Include="Libraries/**" />
 +    <EmbeddedResource Include="Libraries/**">
 +      <LogicalName>%(Filename)%(Extension)</LogicalName>
++      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
++      <Link>%(Filename)%(Extension)</Link>
 +    </EmbeddedResource>
      <EmbeddedResource Remove="Libraries/Windows/**" Condition="!$(DefineConstants.Contains('WINDOWS'))" />
      <EmbeddedResource Remove="Libraries/Mac/**" Condition="!$(DefineConstants.Contains('MAC'))" />
@@ -96,9 +98,19 @@
    <Target Name="EditBin" AfterTargets="Build">
      <PropertyGroup>
          <EditBinOpts>/largeaddressaware</EditBinOpts>
-@@ -82,7 +_,13 @@
+@@ -80,9 +_,22 @@
+ 	<Message Text="Checking headers with dumpbin." Importance="high" />
+ 	<Exec Command="..\largeaddresstool\dumpbin $(DumpBin) &quot;$(TargetPath)&quot; | findstr &quot;large&quot;" />
    </Target>
-   <Target Name="CopyToStreamDir" AfterTargets="EditBin" Condition="$(Configuration.Contains('Windows'))">
++  <Target Name="MoveDeps" AfterTargets="EditBin">
++    <Message Text="Moving dependencies to deps folder" Importance="high" />
++    <CreateItem Include="$(TargetDir)**\*.*" Exclude="$(TargetDir)**\$(OutputName).*;$(TargetDir)\FNA.*">
++      <Output TaskParameter="Include" ItemName="Deps" />
++    </CreateItem>
++    <Move SourceFiles="@(Deps)" DestinationFolder="$(TargetDir)\deps" />
++  </Target>
+-  <Target Name="CopyToStreamDir" AfterTargets="EditBin" Condition="$(Configuration.Contains('Windows'))">
++  <Target Name="CopyToStreamDir" AfterTargets="MoveDeps" Condition="$(Configuration.Contains('Windows'))">
      <Message Text="Copying $(OutputName) to Steam Dir..." Importance="high" />
 -    <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(TerrariaSteamPath)\$(OutputName).exe" />
 -    <Copy SourceFiles="$(TargetDir)$(OutputName).pdb" DestinationFolder="$(TerrariaSteamPath)" />
@@ -107,7 +119,7 @@
 +    </CreateItem>
 +    <Copy SourceFiles="@(CoreBuild)" DestinationFolder="$(tModLoaderSteamPath)\%(RecursiveDir)" />
 +  </Target>
-+  <Target Name="CopyToModCompile" AfterTargets="EditBin" Condition="$(Configuration)==MacRelease">
++  <Target Name="CopyToModCompile" AfterTargets="MoveDeps" Condition="$(Configuration)==MacRelease">
 +    <Message Text="Copying tModLoaderMac to ModCompile..." Importance="high" />
 +    <Copy SourceFiles="$(TargetPath)" DestinationFiles="$(tModLoaderSteamPath)\ModCompile\tModLoader.FNA.exe" />
    </Target>

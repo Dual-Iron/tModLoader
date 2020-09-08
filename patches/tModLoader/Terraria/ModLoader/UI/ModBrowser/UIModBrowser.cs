@@ -29,8 +29,7 @@ namespace Terraria.ModLoader.UI.ModBrowser
 		public static bool AvoidGithub;
 		public static bool AvoidImgur;
 		public static bool EarlyAutoUpdate;
-		public static bool PlatformSupportsTls12
-			=> FrameworkVersion.Framework != Framework.Mono || FrameworkVersion.Version >= new Version(5, 20);
+		public static bool PlatformSupportsTls12 => true;
 
 		public UIModDownloadItem SelectedItem;
 
@@ -243,7 +242,7 @@ namespace Terraria.ModLoader.UI.ModBrowser
 					var values = new NameValueCollection {
 						{"modloaderversion", ModLoader.versionedName},
 						{"platform", ModLoader.CompressedPlatformRepresentation},
-						{"netversion", FrameworkVersion.Version.ToString()},
+						{"netversion", Environment.Version.ToString()},
 						{"EarlyAutoUpdate", EarlyAutoUpdate.ToString()}
 					};
 					using (var client = new WebClient()) {
