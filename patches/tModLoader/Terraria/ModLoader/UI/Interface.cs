@@ -389,12 +389,7 @@ namespace Terraria.ModLoader.UI
 		internal static void MessageBoxShow(string text, string caption = null) {
 			// MessageBox.Show fails on Mac, this method will open a text file to show a message.
 			caption ??= "Terraria: Error" + $" ({ModLoader.versionedName})";
-#if !MAC
-			System.Windows.Forms.MessageBox.Show(text, caption);
-#else
-			File.WriteAllText("fake-messagebox.txt", $"{caption}\n\n{text}");
-			Process.Start("fake-messagebox.txt");
-#endif
+			SDL2.SDL.SDL_ShowSimpleMessageBox(SDL2.SDL.SDL_MessageBoxFlags.SDL_MESSAGEBOX_ERROR, caption, text, IntPtr.Zero);
 		}
 	}
 }

@@ -1,13 +1,15 @@
 --- src/Terraria/Terraria/Social/Steam/CoreSocialModule.cs
 +++ src/tModLoader/Terraria/Social/Steam/CoreSocialModule.cs
-@@ -1,6 +_,7 @@
+@@ -1,8 +_,8 @@
  using ReLogic.OS;
  using Steamworks;
  using System;
 +using System.IO;
  using System.Threading;
- using System.Windows.Forms;
+-using System.Windows.Forms;
  using Terraria.Localization;
+ 
+ namespace Terraria.Social.Steam
 @@ -10,7 +_,7 @@
  	public class CoreSocialModule : ISocialModule
  	{
@@ -36,3 +38,16 @@
  				Environment.Exit(1);
  			}
  
+@@ -93,12 +_,8 @@
+ 		}
+ 
+ 		public void Shutdown() {
+-#if WINDOWS
+-			Application.ApplicationExit += delegate {
+-#else
+ 			IsSteamValid = false;
+ 			AppDomain.CurrentDomain.ProcessExit += delegate {
+-#endif
+ 				IsSteamValid = false;
+ 			};
+ 		}

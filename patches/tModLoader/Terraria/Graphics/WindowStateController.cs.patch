@@ -1,0 +1,102 @@
+--- src/Terraria/Terraria/Graphics/WindowStateController.cs
++++ src/tModLoader/Terraria/Graphics/WindowStateController.cs
+@@ -1,62 +_,49 @@
+-#if WINDOWS
+ using System.Drawing;
+-using System.Windows.Forms;
+-#endif
++using SDL2;
+ 
+ namespace Terraria.Graphics
+ {
+ 	public class WindowStateController
+ 	{
+-#if WINDOWS
+-		public bool CanMoveWindowAcrossScreens => true;
+-#else
+-		public bool CanMoveWindowAcrossScreens => false;
+-#endif
+-
+-#if WINDOWS
+ 		public string ScreenDeviceName => Main.instance.Window.ScreenDeviceName;
+-#else
+-		public string ScreenDeviceName => "";
+-#endif
+ 
+ 		public void TryMovingToScreen(string screenDeviceName) {
+-#if WINDOWS
+-			if (CanMoveWindowAcrossScreens && TryGetBounds(screenDeviceName, out Rectangle bounds) && IsVisibleOnAnyScreen(bounds)) {
+-				Form form = (Form)Control.FromHandle(Main.instance.Window.Handle);
+-				if (WouldViewFitInScreen(form.Bounds, bounds))
+-					form.Location = new Point(bounds.Width / 2 - form.Width / 2 + bounds.X, bounds.Height / 2 - form.Height / 2 + bounds.Y);
+-			}
+-		}
+-
+-		private bool TryGetBounds(string screenDeviceName, out Rectangle bounds) {
+-			bounds = default(Rectangle);
+-			Screen[] allScreens = Screen.AllScreens;
+-			foreach (Screen screen in allScreens) {
+-				if (screen.DeviceName == screenDeviceName) {
+-					bounds = screen.Bounds;
+-					return true;
+-				}
+-			}
+-
+-			return false;
+-		}
+-
+-		private bool WouldViewFitInScreen(Rectangle view, Rectangle screen) {
+-			if (view.Width <= screen.Width)
+-				return view.Height <= screen.Height;
+-
+-			return false;
+-		}
+-
+-		private bool IsVisibleOnAnyScreen(Rectangle rect) {
+-			Screen[] allScreens = Screen.AllScreens;
+-			for (int i = 0; i < allScreens.Length; i++) {
+-				if (allScreens[i].WorkingArea.IntersectsWith(rect))
+-					return true;
+-			}
+-
+-			return false;
+-#endif
++			if (TryGetBounds(screenDeviceName, out SDL.SDL_Rect bounds) && IsVisibleOnAnyScreen(bounds)) {
++				SDL.SDL_GetWindowSize(Main.instance.Window.Handle, out int w, out int h);
++				if (WouldViewFitInScreen(w, h, bounds.w, bounds.h)) {
++					int xNew = bounds.w / 2 - w / 2 + bounds.x;
++					int yNew = bounds.h / 2 - h / 2 + bounds.y;
++					SDL.SDL_SetWindowPosition(Main.instance.Window.Handle, xNew, yNew);
++				}
++			}
++		}
++
++		private bool TryGetBounds(string screenDeviceName, out SDL.SDL_Rect bounds) {
++			bounds = default;
++			var numScreens = SDL.SDL_GetNumVideoDisplays();
++			for (int i = 0; i < numScreens; i++) {
++				if (SDL.SDL_GetDisplayName(i) == screenDeviceName) {
++					SDL.SDL_GetDisplayBounds(i, out bounds);
++					return true;
++				}
++			}
++			return false;
++		}
++
++		private bool WouldViewFitInScreen(int w1, int h1, int w2, int h2) {
++			return w1 <= w2 && h1 <= h2;
++		}
++
++		private bool IsVisibleOnAnyScreen(SDL.SDL_Rect rect) {
++			var numScreens = SDL.SDL_GetNumVideoDisplays();
++			for (int i = 0; i < numScreens; i++) {
++				SDL.SDL_GetDisplayBounds(i, out SDL.SDL_Rect bounds);
++				if (new Rectangle(rect.x, rect.y, rect.w, rect.h).IntersectsWith(
++					new Rectangle(bounds.x, bounds.y, bounds.w, bounds.y)))
++					return true;
++			}
++
++			return false;
+ 		}
+ 	}
+ }

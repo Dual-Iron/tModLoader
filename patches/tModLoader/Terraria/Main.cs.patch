@@ -1,9 +1,22 @@
 --- src/Terraria/Terraria/Main.cs
 +++ src/tModLoader/Terraria/Main.cs
-@@ -32,6 +_,7 @@
- #if WINDOWS
- using System.Windows.Forms;
- #endif
+@@ -6,9 +_,7 @@
+ using Microsoft.Xna.Framework.Input;
+ using ReLogic.Content;
+ using ReLogic.Content.Sources;
+-#if MAC
+ using SDL2;
+-#endif
+ using ReLogic.Graphics;
+ using ReLogic.Localization.IME;
+ using ReLogic.OS;
+@@ -29,9 +_,7 @@
+ using System.Text;
+ using System.Threading;
+ using System.Threading.Tasks;
+-#if WINDOWS
+-using System.Windows.Forms;
+-#endif
 +using Steamworks;
  using Terraria.Achievements;
  using Terraria.Audio;
@@ -380,6 +393,33 @@
  			Configuration.Get("SmartCursorToggle", ref cSmartCursorModeIsToggleAndNotHold);
  			Configuration.Get("MapEnabled", ref mapEnabled);
  			Configuration.Get("InvasionBarMode", ref invasionProgressMode);
+@@ -3322,20 +_,19 @@
+ 				base.InactiveSleepTime = TimeSpan.FromMilliseconds(flag2 ? 20 : 0);
+ 			}
+ 
+-#if CLIENT && WINDOWS
+-			Form form = (Form)Control.FromHandle(instance.Window.Handle);
++#if CLIENT
+ 			if (screenBorderless) {
+-				SetBorderlessFormStyle(form);
++				SetBorderlessFormStyle(Window.Handle);
+ 			}
+ 			else if (screenMaximized) {
+-				form.WindowState = FormWindowState.Maximized;
+-				form.FormBorderStyle = FormBorderStyle.Sizable;
++				SDL.SDL_MaximizeWindow(Window.Handle);
++				SDL.SDL_SetWindowResizable(Window.Handle, SDL.SDL_bool.SDL_TRUE);
+ 			}
+ 			else {
+-				form.FormBorderStyle = FormBorderStyle.Sizable;
++				SDL.SDL_SetWindowResizable(Window.Handle, SDL.SDL_bool.SDL_TRUE);
+ 			}
+ 
+-			Control.FromHandle(instance.Window.Handle).BringToFront();
++			SDL.SDL_RaiseWindow(Window.Handle);
+ #endif
+ 			if(!flag)
+ 				Configuration.Get("Support4K", ref Support4K);
 @@ -3467,6 +_,7 @@
  				};
  			}
@@ -396,6 +436,17 @@
 +			if (currentValue != 230 || ModLoader.ModLoader.LastLaunchedTModLoaderVersion != ModLoader.ModLoader.version)
  				SaveSettings();
  		}
+ 
+@@ -3527,8 +_,8 @@
+ 								terrariasFixedTiming = binaryReader.ReadBoolean();
+ 
+ 							if (num >= 91 && binaryReader.ReadBoolean()) {
+-#if CLIENT && WINDOWS
+-								((Form)Control.FromHandle(base.Window.Handle)).WindowState = FormWindowState.Maximized;
++#if CLIENT
++								SDL.SDL_MaximizeWindow(Window.Handle);
+ #endif
+ 							}
  
 @@ -3605,9 +_,11 @@
  				FileUtilities.Delete(PlayerList[i].Path, PlayerList[i].IsCloudSave);
@@ -1003,6 +1054,17 @@
  			if (CaptureManager.Instance.IsCapturing)
  				return;
  
+@@ -12592,9 +_,7 @@
+ 
+ 				UpdateOldNPCShop();
+ 				hasFocus = base.IsActive;
+-#if WINDOWS
+-				hasFocus |= (Form.ActiveForm == Control.FromHandle(base.Window.Handle) as Form);
+-#endif
++
+ 				if (!base.IsActive && netMode == 0) {
+ 					if (!Platform.IsOSX)
+ 						base.IsMouseVisible = true;
 @@ -12604,6 +_,9 @@
  
  					mouseLeftRelease = false;
@@ -2784,6 +2846,57 @@
  			if (menuMode == num)
  				GamepadMainMenuHandler.LastDrew = num;
  		}
+@@ -39009,37 +_,33 @@
+ 			_uiScaleWanted = uiScaleWanted;
+ 		}
+ 
+-#if !WINDOWS
+-		private static bool IsBorderlessDisplayAvailable() => false;
+-#else
+ 		private static bool IsBorderlessDisplayAvailable() => true;
+ 
+-		private static void SetDisplayModeAsBorderless(ref int width, ref int height, Form form) {
++		private static void SetDisplayModeAsBorderless(ref int width, ref int height, IntPtr window) {
+ 			if (screenBorderless && !graphics.IsFullScreen && screenBorderlessPendingResizes > 0) {
+ 				screenBorderlessPendingResizes--;
++				var display = SDL.SDL_GetWindowDisplayIndex(window);
+-				System.Drawing.Rectangle bounds = Screen.FromPoint(form.Location).Bounds;
++				SDL.SDL_GetDisplayBounds(display, out SDL.SDL_Rect bounds);
+-				width = bounds.Width;
++				width = bounds.w;
+-				height = bounds.Height;
++				height = bounds.h;
+ 				TryPickingDefaultUIScale(height);
+ 			}
+ 		}
+ 
+-		private static void ApplyBorderlessResolution(Form form) {
++		private static void ApplyBorderlessResolution(IntPtr window) {
+ 			if (screenBorderlessPendingResizes > 0) {
+ 				screenBorderlessPendingResizes--;
+-				System.Drawing.Rectangle bounds = Screen.FromPoint(form.Location).Bounds;
+-				form.Location = new System.Drawing.Point(bounds.X, bounds.Y);
+-				form.FormBorderStyle = FormBorderStyle.None;
+-				form.Width = bounds.Width;
+-				form.Height = bounds.Height;
++				var display = SDL.SDL_GetWindowDisplayIndex(window);
++				SDL.SDL_GetDisplayBounds(display, out SDL.SDL_Rect bounds);
++				SDL.SDL_SetWindowPosition(window, bounds.x, bounds.y);
++				SDL.SDL_SetWindowSize(window, bounds.w, bounds.h);
+ 			}
+ 		}
+ 
+-		private static void SetBorderlessFormStyle(Form form) {
+-			form.Location = new System.Drawing.Point(0, 0);
+-			form.FormBorderStyle = FormBorderStyle.None;
++		private static void SetBorderlessFormStyle(IntPtr window) {
++			SDL.SDL_SetWindowPosition(window, 0, 0);
++			SDL.SDL_SetWindowBordered(window, SDL.SDL_bool.SDL_FALSE);
+ 		}
+-#endif
+ 
+ 		public static void OpenCharacterSelectUI() {
+ 			MenuUI.SetState(_characterSelectMenu);
 @@ -39476,6 +_,7 @@
  			if (SceneMetrics.MushroomTileCount > SceneMetrics.MushroomTileMax)
  				num8 = 2;
@@ -3213,24 +3326,78 @@
  		}
  
  		public static int DamageVar(float dmg, float luck = 0f) {
-@@ -50171,7 +_,9 @@
+@@ -50104,30 +_,22 @@
+ 
+ 		public static void SetDisplayMode(int width, int height, bool fullscreen) {
+ 			bool flag = false;
+-#if WINDOWS
+-			Form form = null;
+-			screenMaximized = (((Form)Control.FromHandle(instance.Window.Handle)).WindowState == FormWindowState.Maximized);
++			var window = instance.Window.Handle;
++			var windowFlags = (SDL.SDL_WindowFlags)SDL.SDL_GetWindowFlags(window);
++			screenMaximized = windowFlags.HasFlag(SDL.SDL_WindowFlags.SDL_WINDOW_MAXIMIZED);
+ 			if (screenBorderless && screenMaximized && !graphics.IsFullScreen) {
+ 				screenMaximized = false;
+-				((Form)Control.FromHandle(instance.Window.Handle)).WindowState = FormWindowState.Normal;
++				SDL.SDL_RestoreWindow(window);
+ 			}
+-#else
+ 			Main.screenMaximized = false;
+-#endif
+-
+-#if WINDOWS
+-			form = (Form)Control.FromHandle(instance.Window.Handle);
+-			flag = (form.FormBorderStyle == FormBorderStyle.None);
+-#endif
++			flag = windowFlags.HasFlag(SDL.SDL_WindowFlags.SDL_WINDOW_BORDERLESS);
+ 			bool flag2 = false;
+ 			int num3;
+ 			int num4;
+ 			if (screenBorderless || screenMaximized || graphics.IsFullScreen || fullscreen) {
+-#if WINDOWS
+-				form.MinimumSize = new System.Drawing.Size(0, 0);
++				SDL.SDL_SetWindowMinimumSize(window, 0, 0);
+ 				if (!fullscreen)
+-					SetDisplayModeAsBorderless(ref width, ref height, form);
++					SetDisplayModeAsBorderless(ref width, ref height, window);
+-#endif
+ 
+ 				if(width > maxScreenW) {
+ 					float num = (float)height / (float)width;
+@@ -50155,13 +_,11 @@
+ 			}
+ 			else {
+ 				PlayerInput.RawMouseScale = Vector2.One;
+-#if WINDOWS
+-				form.MinimumSize = new System.Drawing.Size(minScreenW, minScreenH);
++				SDL.SDL_SetWindowMinimumSize(window, minScreenW, minScreenH);
+ 				if (flag) {
+ 					width = displayWidth[0];
+ 					height = displayHeight[0];
+ 				}
+-#endif
+ 
+ 				width = Math.Min(width, maxScreenW);
+ 				height = Math.Min(height, maxScreenH);
+@@ -50170,8 +_,9 @@
+ 				flag2 = (graphics.PreferredBackBufferWidth != graphics.GraphicsDevice.Viewport.Width || graphics.PreferredBackBufferHeight != graphics.GraphicsDevice.Viewport.Height);
  			}
  
- #if WINDOWS
+-#if WINDOWS
+-			if (!fullscreen && !flag2) {
 +			// appears redundant. Just causes the window to fight the user when attempting to resize too small
 +			// with this disabled, the window will just snap back to minimum size when released
--			if (!fullscreen && !flag2) {
 +			/*if (!fullscreen && !flag2) {
  				if (form.ClientSize.Width < graphics.PreferredBackBufferWidth) {
  					width = form.ClientSize.Width;
  					flag2 = true;
-@@ -50181,11 +_,12 @@
+@@ -50181,11 +_,11 @@
  					height = form.ClientSize.Height;
  					flag2 = true;
  				}
 -			}
+-#endif
 +			}*/
- #endif
  
 -			width &= 0x7FFFFFFE;
 -			height &= 0x7FFFFFFE;
@@ -3251,3 +3418,25 @@
  				PlayerInput.CacheOriginalScreenDimensions();
  				FixUIScale();
  				if (Main.OnResolutionChanged != null)
+@@ -50216,15 +_,16 @@
+ #if WINDOWS
+ 				if (!fullscreen) {
+ 					if (screenBorderless) {
+-						ApplyBorderlessResolution(form);
+-						form.FormBorderStyle = FormBorderStyle.None;
++						ApplyBorderlessResolution(window);
++						SDL.SDL_SetWindowBordered(window, SDL.SDL_bool.SDL_FALSE);
++						SDL.SDL_SetWindowResizable(window, SDL.SDL_bool.SDL_FALSE);
+ 					}
+ 					else {
+-						form.FormBorderStyle = FormBorderStyle.Sizable;
++						SDL.SDL_SetWindowBordered(window, SDL.SDL_bool.SDL_TRUE);
++						SDL.SDL_SetWindowResizable(window, SDL.SDL_bool.SDL_TRUE);
+ 					}
+ 
+-					form.SendToBack();
+-					form.BringToFront();
++					SDL.SDL_RaiseWindow(window);
+ 				}
+ #endif
+ 

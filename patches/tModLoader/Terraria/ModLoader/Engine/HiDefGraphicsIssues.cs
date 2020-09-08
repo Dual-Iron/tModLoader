@@ -11,7 +11,6 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using System.Windows.Forms;
 using Terraria.ModLoader.IO;
 
 namespace Terraria.ModLoader.Engine
@@ -136,11 +135,7 @@ namespace Terraria.ModLoader.Engine
 
 			//var modsAffected = ModContent.HiDefMods.Count == 0 ? "No mods will be affected." : $"The following mods will be affected {string.Join(", ", ModContent.HiDefMods.Select(m => m.DisplayName))}";
 			string message = $"tML encountered a crash when testing some experimental graphics features. If this issue persists consistently, you may have to edit config.json and set the Support4K setting to false. \nPlease restart your game.\nReport Status: {reportStatus}";
-#if !MAC
-			MessageBox.Show(message, "Graphics Engine Failure", MessageBoxButtons.OK, MessageBoxIcon.Error);
-#else
-			UI.Interface.MessageBoxShow(message, "Graphics Engine Failure");
-#endif
+			SDL2.SDL.SDL_ShowSimpleMessageBox(SDL2.SDL.SDL_MessageBoxFlags.SDL_MESSAGEBOX_ERROR, "Graphics Engine Failure", message, IntPtr.Zero);
 			Environment.Exit(1);
 		}
 

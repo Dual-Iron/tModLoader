@@ -1,6 +1,6 @@
 --- src/Terraria/Terraria/Program.cs
 +++ src/tModLoader/Terraria/Program.cs
-@@ -2,19 +_,23 @@
+@@ -2,19 +_,20 @@
  using ReLogic.OS;
  using System;
  using System.Collections.Generic;
@@ -14,10 +14,10 @@
  using System.Runtime.CompilerServices;
  using System.Text;
  using System.Threading;
+-#if CLIENT
+-using System.Windows.Forms;
+-#endif
 +
- #if CLIENT
- using System.Windows.Forms;
- #endif
  using Terraria.Initializers;
  using Terraria.Localization;
 +using Terraria.ModLoader;

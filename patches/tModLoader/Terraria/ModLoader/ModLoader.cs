@@ -10,7 +10,6 @@ using System.Reflection;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
 using Steamworks;
 using Terraria.Localization;
 using Terraria.ModLoader.Audio;
