@@ -64,8 +64,7 @@ namespace Terraria.ModLoader.UI
 		public override void OnActivate() {
 			base.OnActivate();
 
-			if (FrameworkVersion.Framework != Framework.Mono || FrameworkVersion.Version >= new Version(5, 20))
-				_area.AddOrRemoveChild(_autoUpdateButton, !string.IsNullOrEmpty(_autoUpdateUrl));
+			_area.AddOrRemoveChild(_autoUpdateButton, !string.IsNullOrEmpty(_autoUpdateUrl));
 		}
 
 		internal void SetMessage(string text) {
