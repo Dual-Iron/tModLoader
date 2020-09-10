@@ -254,6 +254,8 @@ $@"<?xml version=""1.0"" encoding=""utf-8""?>
 				return true;
 			if (!fileContents.Contains("<TargetFramework>netcoreapp3.1</TargetFramework>"))
 				return true;
+			if (!fileContents.Contains("<LangVersion>latest</LangVersion>") && !fileContents.Contains("<LangVersion>preview</LangVersion>"))
+				return true;
 			if (!fileContents.Contains(@"<PackageReference Include=""tModLoader.CodeAssist"" Version=""0.1.*"" />"))
 				return true;
 
