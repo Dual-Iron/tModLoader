@@ -16,6 +16,12 @@ namespace Terraria.ModLoader.Core
 	{
 		private const int MAX_LOGS = 20;
 
+		// This needs to be called only once and before anything else is referenced...
+		// that's the point of a cctor.
+		static LogArchiver() {
+			Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+		}
+
 		/// <summary>
 		/// Attempt archiving logs.
 		/// </summary>
