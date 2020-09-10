@@ -30,6 +30,15 @@
  			}
  		}
  
+@@ -43,7 +_,7 @@
+ 		public Stream OpenStream(string assetName) {
+ 			string name = Path.Combine(_rootDirectory, assetName) + ".xnb";
+ 			try {
+-				return TitleContainer.OpenStream(name);
++				return File.OpenRead(name);
+ 			}
+ 			catch (Exception innerException) {
+ 				throw AssetLoadException.FromMissingAsset(assetName, innerException);
 @@ -71,5 +_,7 @@
  		}
  

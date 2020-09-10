@@ -1,32 +1,44 @@
 --- src/Terraria/Terraria/WindowsLaunch.cs
 +++ src/tModLoader/Terraria/WindowsLaunch.cs
-@@ -1,6 +_,8 @@
+@@ -1,6 +_,9 @@
  #if WINDOWS
 +using Microsoft.Xna.Framework;
  using System;
++using System.Collections.Generic;
  using System.IO;
 +using System.Linq;
  using System.Reflection;
  using System.Runtime.InteropServices;
  using Terraria.Social;
-@@ -63,6 +_,20 @@
- 					return Assembly.Load(array);
+@@ -64,12 +_,31 @@
  				}
  			};
-+
+ 
 +			NativeLibrary.SetDllImportResolver(typeof(Game).Assembly, (name, assembly, searchPath) => {
 +				try {
-+					var files = Directory.GetFiles(Environment.CurrentDirectory, name + ".*");
-+					var match = files.FirstOrDefault(s => File.Exists(s));
-+					if (match != null && NativeLibrary.TryLoad(match, out var handle)) {
++					if (assemblies.TryGetValue(name, out var handle)) {
 +						return handle;
 +					}
-+					return IntPtr.Zero;
++					var files = Directory.GetFiles(Environment.CurrentDirectory, name + "*");
++					var match = files.FirstOrDefault(s => File.Exists(s));
++					if (match != null && NativeLibrary.TryLoad(match, out handle)) {
++						return assemblies[name] = handle;
++					}
++					return assemblies[name] = IntPtr.Zero;
 +				}
 +				catch (DirectoryNotFoundException e) {
-+					throw new DirectoryNotFoundException("A needed library file was missing from the tModLoader/deps directory. " + e.Message, e);
++					throw new DirectoryNotFoundException("A needed library file was missing from the tModLoader directory. " + e.Message, e);
 +				}
 +			});
- 
++
  #if SERVER
  			WindowsLaunch._handleRoutine = new WindowsLaunch.HandlerRoutine(WindowsLaunch.ConsoleCtrlCheck);
+ 			WindowsLaunch.SetConsoleCtrlHandler(WindowsLaunch._handleRoutine, true);
+ #endif
+ 			Program.LaunchGame(args);
+ 		}
++
++		private static Dictionary<string, IntPtr> assemblies = new Dictionary<string, IntPtr>();
+ 	}
+ }
+ #endif

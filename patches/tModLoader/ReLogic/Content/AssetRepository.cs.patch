@@ -1,6 +1,13 @@
 --- src/Terraria/ReLogic/Content/AssetRepository.cs
 +++ src/tModLoader/ReLogic/Content/AssetRepository.cs
-@@ -7,8 +_,8 @@
+@@ -1,14 +_,15 @@
+ using ReLogic.Content.Sources;
+ using System;
+ using System.Collections.Generic;
++using System.IO;
+ using System.Linq;
+ 
+ namespace ReLogic.Content
  {
  	public class AssetRepository : IAssetRepository, IDisposable
  	{
