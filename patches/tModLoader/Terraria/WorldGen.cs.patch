@@ -178,6 +178,15 @@
  			worldCleared = true;
  		}
  
+@@ -4443,6 +_,8 @@
+ 		}
+ 
+ 		public static bool InWorld(int x, int y, int fluff = 0) {
++			if (Main.tile == null)
++				return false;
+ 			if (x < fluff || x >= Main.maxTilesX - fluff || y < fluff || y >= Main.maxTilesY - fluff)
+ 				return false;
+ 
 @@ -5387,17 +_,18 @@
  			Main.lockMenuBGChange = true;
  			WorldGenConfiguration configuration = WorldGenConfiguration.FromEmbeddedPath("Terraria.GameContent.WorldBuilding.Configuration.json");

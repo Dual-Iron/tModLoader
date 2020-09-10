@@ -14,6 +14,7 @@ using Terraria.ModLoader.Config;
 using Terraria.ModLoader.UI.ModBrowser;
 using Terraria.ModLoader.Core;
 using Terraria.Audio;
+using System;
 
 namespace Terraria.ModLoader.UI
 {
@@ -248,8 +249,13 @@ namespace Terraria.ModLoader.UI
 
 		private static void OpenModsFolder(UIMouseEvent evt, UIElement listeningElement) {
 			SoundEngine.PlaySound(10, -1, -1, 1);
-			Directory.CreateDirectory(ModLoader.ModPath);
-			Process.Start(ModLoader.ModPath);
+			try {
+				Directory.CreateDirectory(ModLoader.ModPath);
+				Process.Start(ModLoader.ModPath);
+			}
+			catch(Exception e) {
+				Logging.tML.Error(e);
+			}
 		}
 
 		private static void GotoModPacksMenu(UIMouseEvent evt, UIElement listeningElement) {
