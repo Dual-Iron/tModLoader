@@ -12,7 +12,7 @@
    </PropertyGroup>
    <PropertyGroup Condition="$(Configuration.Contains('Server'))">
      <OutputType>Exe</OutputType>
-@@ -17,56 +_,76 @@
+@@ -17,56 +_,80 @@
      <OutputName>$(OutputName)Debug</OutputName>
    </PropertyGroup>
    <PropertyGroup>
@@ -65,7 +65,10 @@
 -    <Reference Include="System.Runtime.Serialization" />
 -    <Reference Include="System.Windows.Forms">
 -      <HintPath Condition="$(DefineConstants.Contains('Mono'))">Libraries/Mono/System.Windows.Forms.dll</HintPath>
--    </Reference>
++    <Reference Include="TerrariaHooks">
++      <HintPath Condition="$(DefineConstants.Contains('XNA'))">Libraries/XNA/TerrariaHooks.dll</HintPath>
++      <HintPath Condition="$(DefineConstants.Contains('FNA'))">Libraries/FNA/TerrariaHooks.dll</HintPath>
+     </Reference>
 -    <Reference Include="WindowsBase" />
    </ItemGroup>
    <ItemGroup>

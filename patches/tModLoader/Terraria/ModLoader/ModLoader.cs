@@ -23,6 +23,8 @@ using Terraria.Initializers;
 using Terraria.ModLoader.Assets;
 using ReLogic.Content;
 using ReLogic.Graphics;
+using System.Runtime.Loader;
+using System.Runtime.CompilerServices;
 
 namespace Terraria.ModLoader
 {
@@ -57,7 +59,8 @@ namespace Terraria.ModLoader
 
 		private static readonly IDictionary<string, Mod> modsByName = new Dictionary<string, Mod>(StringComparer.OrdinalIgnoreCase);
 		private static WeakReference[] weakModReferences = new WeakReference[0];
-
+		
+		internal static AssemblyLoadContext modContext = new AssemblyLoadContext("ModLoader Context", true);
 		internal static readonly string modBrowserPublicKey = "<RSAKeyValue><Modulus>oCZObovrqLjlgTXY/BKy72dRZhoaA6nWRSGuA+aAIzlvtcxkBK5uKev3DZzIj0X51dE/qgRS3OHkcrukqvrdKdsuluu0JmQXCv+m7sDYjPQ0E6rN4nYQhgfRn2kfSvKYWGefp+kqmMF9xoAq666YNGVoERPm3j99vA+6EIwKaeqLB24MrNMO/TIf9ysb0SSxoV8pC/5P/N6ViIOk3adSnrgGbXnFkNQwD0qsgOWDks8jbYyrxUFMc4rFmZ8lZKhikVR+AisQtPGUs3ruVh4EWbiZGM2NOkhOCOM4k1hsdBOyX2gUliD0yjK5tiU3LBqkxoi2t342hWAkNNb4ZxLotw==</Modulus><Exponent>AQAB</Exponent></RSAKeyValue>";
 		internal static string modBrowserPassphrase = "";
 
@@ -139,7 +142,6 @@ namespace Terraria.ModLoader
 					return;
 
 				var modInstances = ModOrganizer.LoadMods(token);
-
 				weakModReferences = modInstances.Select(x => new WeakReference(x)).ToArray();
 				modInstances.Insert(0, new ModLoaderMod());
 				Mods = modInstances.ToArray();
@@ -233,8 +235,21 @@ namespace Terraria.ModLoader
 		private static bool Unload()
 		{
 			try {
-				// have to move unload logic to a separate method so the stack frame is cleared. Otherwise unloading can capture mod instances in local variables, even with memory barriers (thanks compiler weirdness)
-				do_Unload();
+				LogUnload();
+				// For modders:
+				// As long as there are NO references to a mod or its assembly in the LoadContext outside the mod itself, it will unload perfectly fine.
+				// This means that adding any reference to your mod to an object rooted in tMod;
+				// assets, a type instance, anything; MUST be handled and unloaded accordingly.
+				// When in doubt, keep it non-static, and always unload defensively.
+
+				// As for tMod: 
+				// Unloading the assemblycontext requires there to be no references AT ALL to the mod or its assembly anywhere.
+				// This includes the Mods array, ContentEntries, AssemblyManager caches, and all content. 
+				// Those are unloaded first, manually.
+				// This includes also locals (whether real or JIT-generated) in the relevant method (UnloadAssemblyLoadContext) and its callers (Unload).
+				// To prevent such local references, we separate the Unload method into distinct, non-inlined methods to prevent any generated locals from hanging onto the mod as best we can.
+				UnloadContent();
+				UnloadAssemblyLoadContext();
 				WarnModsStillLoaded();
 				return true;
 			}
@@ -251,8 +266,8 @@ namespace Terraria.ModLoader
 			}
 		}
 
-		private static void do_Unload()
-		{
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private static void LogUnload() {
 			Logging.tML.Info("Unloading mods");
 			if (Main.dedServ) {
 				Console.WriteLine("Unloading mods...");
@@ -260,15 +275,35 @@ namespace Terraria.ModLoader
 			else {
 				Interface.loadMods.SetLoadStage("tModLoader.MSUnloading", Mods.Length);
 			}
+		}
 
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private static void UnloadContent() {
 			ModContent.UnloadModContent();
-			Mods = new Mod[0];
+			Mods = Array.Empty<Mod>();
 			modsByName.Clear();
 			ModContent.Unload();
+			AssemblyManager.Unload();
 
 			MemoryTracking.Clear();
-			Thread.MemoryBarrier();
-			GC.Collect();
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private static void UnloadAssemblyLoadContext() {
+			var asmRef = new WeakReference(modContext, true);
+			modContext.Unload();
+			modContext = new AssemblyLoadContext(modContext.Name, modContext.IsCollectible);
+
+			for (int i = 0; asmRef.IsAlive; i++) {
+				if (i > 10) {
+					// Try several times to unload the assembly context, but we can't force it.
+					Logging.tML.Warn("Assembly loader context refused to finalize");
+					break;
+				}
+				// Beg the assemblies to finalize and cleanup
+				GC.Collect();
+				GC.WaitForPendingFinalizers();
+			}
 		}
 
 		internal static List<string> badUnloaders = new List<string>();
@@ -306,7 +341,6 @@ namespace Terraria.ModLoader
 			}
 		}
 
-		// TODO: This doesn't work on mono for some reason. Investigate.
 		public static bool IsSignedBy(TmodFile mod, string xmlPublicKey)
 		{
 			var f = new RSAPKCS1SignatureDeformatter();

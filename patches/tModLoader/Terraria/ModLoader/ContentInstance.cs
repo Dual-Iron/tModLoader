@@ -58,6 +58,7 @@ namespace Terraria.ModLoader
 		internal static void Clear() {
 			foreach (var entry in contentByType)
 				entry.Value.Clear();
+			contentByType.Clear();
 		}
 	}
 

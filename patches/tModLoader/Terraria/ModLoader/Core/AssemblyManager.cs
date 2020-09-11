@@ -191,7 +191,10 @@ namespace Terraria.ModLoader.Core
 			}
 
 			private Assembly LoadAssembly(byte[] code, byte[] pdb = null) {
-				var asm = Assembly.Load(code, pdb);
+				Assembly asm;
+				using (var codeStream = new MemoryStream(code, false))
+				using (var pdbStream = new MemoryStream(pdb, false))
+					asm = ModLoader.modContext.LoadFromStream(codeStream, pdbStream);
 				assemblies.Add(asm);
 				loadedAssemblies[asm.GetName().Name] = asm;
 				assemblyBinaries[asm.GetName().Name] = code;
@@ -217,14 +220,20 @@ namespace Terraria.ModLoader.Core
 
 		private static CecilAssemblyResolver cecilAssemblyResolver = new CecilAssemblyResolver();
 
+		internal static void Unload() {
+			loadedMods.Clear();
+			loadedAssemblies.Clear();
+			assemblyBinaries.Clear();
+			hostModForAssembly.Clear();
+		}
+
 		private static bool assemblyResolverAdded;
 		internal static void AddAssemblyResolver() {
 			if (assemblyResolverAdded)
 				return;
 			assemblyResolverAdded = true;
-
-			AppDomain.CurrentDomain.AssemblyResolve += (_, args) => {
-				string name = new AssemblyName(args.Name).Name;
+			ModLoader.modContext.Resolving += (_, asmName) => {
+				string name = new AssemblyName(asmName.Name).Name;
 
 				if (name == "Terraria")
 					return Assembly.GetExecutingAssembly();

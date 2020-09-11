@@ -3,12 +3,12 @@
     "Terraria": {
       "commandName": "Executable",
       "executablePath": "$(tMLPath)",
-      "workingDirectory": "$(TerrariaSteamPath)"
+      "workingDirectory": "$(tModLoaderSteamPath)"
     },
     "TerrariaServer": {
       "commandName": "Executable",
       "executablePath": "$(tMLServerPath)",
-      "workingDirectory": "$(TerrariaSteamPath)"
+      "workingDirectory": "$(tModLoaderSteamPath)"
     }
   }
 }

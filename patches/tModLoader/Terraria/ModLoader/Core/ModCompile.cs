@@ -726,7 +726,8 @@ namespace Terraria.ModLoader.Core
 			var parseOptions = new CSharpParseOptions(LanguageVersion.Preview, preprocessorSymbols: preprocessorSymbols);
 
 			var emitOptions = new EmitOptions(debugInformationFormat: DebugInformationFormat.PortablePdb);
-
+			
+			// TODO Metadatareference is sus with its memory consumption...
 			var refs = references.Select(s => MetadataReference.CreateFromFile(s));
 			var src = files.Select(f => SyntaxFactory.ParseSyntaxTree(File.ReadAllText(f), parseOptions, f, Encoding.UTF8));
 			var comp = CSharpCompilation.Create(name, src, refs, options);
