@@ -235,9 +235,9 @@ $@"<?xml version=""1.0"" encoding=""utf-8""?>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <PlatformTarget>x86</PlatformTarget>
     <LangVersion>latest</LangVersion>
-	<!--Include the following if you want nullable reference types-->
-	<!--<Nullable>enable</Nullable>-->
-	<!--<WarningsAsErrors>nullable</WarningsAsErrors>-->
+    <!--Include the following if you want nullable reference types-->
+    <!--<Nullable>enable</Nullable>-->
+    <!--<WarningsAsErrors>nullable</WarningsAsErrors>-->
   </PropertyGroup>
   <Target Name=""BuildMod"" AfterTargets=""Build"">
     <Exec Command=""&quot;$(tMLBuildServerPath)&quot; -build $(ProjectDir) -eac $(TargetPath) -define $(DefineConstants) -unsafe $(AllowUnsafeBlocks)"" />
@@ -270,12 +270,12 @@ $@"{{
     ""Terraria"": {{
       ""commandName"": ""Executable"",
       ""executablePath"": ""$(tMLPath)"",
-      ""workingDirectory"": ""$(TerrariaSteamPath)""
+      ""workingDirectory"": ""$(tModLoaderSteamPath)""
     }},
     ""TerrariaServer"": {{
       ""commandName"": ""Executable"",
       ""executablePath"": ""$(tMLServerPath)"",
-      ""workingDirectory"": ""$(TerrariaSteamPath)""
+      ""workingDirectory"": ""$(tModLoaderSteamPath)""
     }}
   }}
 }}";

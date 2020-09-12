@@ -235,7 +235,7 @@ namespace Terraria.ModLoader.Core
 			ModLoader.modContext.Resolving += (_, asmName) => {
 				string name = new AssemblyName(asmName.Name).Name;
 
-				if (name == "Terraria")
+				if (name == "Terraria" || name == Assembly.GetExecutingAssembly().GetName().Name)
 					return Assembly.GetExecutingAssembly();
 
 				loadedAssemblies.TryGetValue(name, out Assembly a);

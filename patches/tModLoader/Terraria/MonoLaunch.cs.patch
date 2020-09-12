@@ -1,11 +1,13 @@
 --- src/Terraria/Terraria/MonoLaunch.cs
 +++ src/tModLoader/Terraria/MonoLaunch.cs
-@@ -3,13 +_,18 @@
+@@ -3,13 +_,20 @@
  using System.IO;
  using System.Reflection;
  using Terraria;
 +using System.Runtime.InteropServices;
 +using System.Collections.Generic;
++using Microsoft.Xna.Framework;
++using System.Linq;
  
  internal static class MonoLaunch
  {
